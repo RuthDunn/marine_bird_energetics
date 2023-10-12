@@ -237,8 +237,14 @@ for (days in 1:simlationdays) {
   # Calculate the rest of the daily time activity budget
   leftovertime <- 24 - foragingtime
   landtime <- ifelse(days > 130 & days < 190, leftovertime * 0.5, 0)
-  onwaterrestingtime <- (leftovertime) * ifelse(days > 130 & days < 190, 0.3, 0.7)
-  swimtime <- (leftovertime) * ifelse(days > 130 & days < 190, 0.2, 0.3)
+  
+  onwaterrestingtime <- (leftovertime) * ifelse(days > 130 & days < 190, 0.3,
+                                                ifelse(days > 120 & days < 130 | days < 200 & days > 190, 0.5,
+                                                0.7))
+  
+  swimtime <- (leftovertime) * ifelse(days > 130 & days < 190, 0.2,
+                                      ifelse(days > 120 & days < 130 | days < 200 & days > 190, 0.5,
+                                             0.3))
   
   BMR <- (((((4.05 * (bm)^0.79)/1000) * 18.8)) +
             ((3.201 * (bm ^0.719)))/24)/2 # calculate BMR as the mean of the two BMR equations
@@ -318,9 +324,12 @@ ggplot() +
   xlab("Date") +
   facet_grid(scenario~., labeller = as_labeller(facet_names))
 
+ggsave("/Users/Ruth/Dropbox/Other Work/Calculating_energy_budgets/GreatAuk_DEE.png",
+       width = 8, height = 9)
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Extract values for the text ####
+# Extract values for Figure B ####
 
 # Scenario A
 # Total annual DEE
@@ -340,8 +349,26 @@ sum(t(dailyEEC)[-c(1:11),], na.rm = T)
 # Total non-breeding DEE
 sum((t(dailyEEC)[-c(1:11),])[-c(130:190)])
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Calc diffs in strategies for the manuscript
+
+# We showed that if, during the non-breeding season, the great auk made diurnal trips to sea to
+# forage and returned to land during the night, it would have expended __% less energy than if
+# they stayed at sea throughout the entire non-breeding period.
+(sum((t(dailyEEA)[-c(1:11),])[-c(130:190)]) - sum((t(dailyEEB)[-c(1:11),])[-c(130:190)]))/
+  ((sum((t(dailyEEA)[-c(1:11),])[-c(130:190)]) + sum((t(dailyEEB)[-c(1:11),])[-c(130:190)]))/2) * 100
+
+# Furthermore, remaining within cool Arctic oceans would have incurred a __% increase in
+# energy expenditure throughout the non-breeding period relative to if it adopted
+# a southern migration to the Atlantic Ocean near Morocco
+(sum((t(dailyEEB)[-c(1:11),])[-c(130:190)]) - sum((t(dailyEEC)[-c(1:11),])[-c(130:190)]))/
+  ((sum((t(dailyEEB)[-c(1:11),])[-c(130:190)]) + sum((t(dailyEEC)[-c(1:11),])[-c(130:190)]))/2) * 100
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Extract just May and June dates to pull out some values for the manuscript
+
 may.june <- plot.df1 %>%
   mutate(Month = as.numeric(format(date,'%m'))) %>%
   filter(Month == c(5,6))
